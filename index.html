@@ -3,220 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prisongs - Full Length Player</title>
+    <title>PriSongs - High Quality Music</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        .active-tab { color: #818cf8; border-bottom: 2px solid #818cf8; }
-        .player-gradient { background: linear-gradient(to top, #000 0%, #0f172a 100%); }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .active-tab { color: #6366f1; border-bottom: 2px solid #6366f1; }
+        .player-blur { background: rgba(10, 10, 15, 0.9); backdrop-filter: blur(20px); }
         input[type='range'] { accent-color: #6366f1; cursor: pointer; }
-        .glass { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(15px); }
-        .song-card:hover img { transform: scale(1.05); }
+        .song-card:hover { transform: translateY(-6px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .loader-spin { border: 3px solid rgba(99, 102, 241, 0.1); border-top: 3px solid #6366f1; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-[#020617] text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500">
+<body class="bg-[#050508] text-slate-100 min-h-screen flex flex-col">
 
     <!-- Top Navigation -->
-    <nav class="glass sticky top-0 z-50 border-b border-slate-800 p-4">
-        <div class="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-2 text-indigo-500 font-black text-2xl tracking-tighter cursor-pointer" onclick="location.reload()">
-                <i data-lucide="music"></i> <span>Prisongs<span class="text-white">PRO</span></span>
+    <nav class="sticky top-0 z-50 bg-[#050508]/80 backdrop-blur-md border-b border-white/5 p-4">
+        <div class="container mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="location.reload()">
+                <div class="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-600/20">
+                    <i data-lucide="play" class="fill-white text-white w-5 h-5"></i>
+                </div>
+                <span class="text-2xl font-extrabold tracking-tighter">Pri<span class="text-indigo-500">Songs</span></span>
             </div>
 
-            <form id="search-form" class="relative w-full max-w-lg">
-                <i data-lucide="search" class="absolute left-3 top-2.5 text-slate-500 w-5 h-5"></i>
-                <input type="text" id="search-input" placeholder="Search full songs (e.g. Starboy, Arijit...)" 
-                    class="w-full bg-slate-900 border border-slate-800 rounded-full py-2 px-10 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm">
+            <form id="search-form" class="relative w-full max-w-xl">
+                <i data-lucide="search" class="absolute left-4 top-3 text-slate-500 w-4 h-4"></i>
+                <input type="text" id="search-input" placeholder="Search full tracks, artists, or albums..." 
+                    class="w-full bg-white/5 border border-white/10 rounded-2xl py-2.5 pl-12 pr-4 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm">
             </form>
 
-            <div class="flex gap-8 font-bold text-xs tracking-widest text-slate-500 uppercase">
-                <button id="tab-home" class="active-tab">Explore</button>
-                <button id="tab-library" class="hover:text-white transition-colors">My Library</button>
+            <div class="flex gap-8 font-bold text-[10px] tracking-[0.2em] text-slate-500 uppercase">
+                <button id="tab-home" class="active-tab py-1 transition-all">Explore</button>
+                <button id="tab-library" class="hover:text-white py-1 transition-all">My Library</button>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content Area -->
+    <!-- Main Section -->
     <main class="container mx-auto p-6 flex-1 overflow-y-auto">
         
-        <!-- Status & Error Messages -->
-        <div id="status-box" class="hidden mb-6 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm flex items-center gap-3">
-            <i data-lucide="info" class="w-4 h-4"></i>
-            <span id="status-text">Ready to stream...</span>
-        </div>
-
-        <div id="error-box" class="hidden mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-3">
-            <i data-lucide="alert-circle" class="w-4 h-4"></i>
-            <span id="error-text">Network error occurred.</span>
-        </div>
-
-        <!-- Section Title -->
-        <div class="flex items-center justify-between mb-8">
-            <h2 id="section-title" class="text-3xl font-black tracking-tight">Featured Tracks</h2>
-            <div id="loader" class="hidden">
-                <div class="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <!-- API Connection Status -->
+        <div id="api-status" class="mb-8 flex items-center justify-between bg-white/5 p-3 rounded-2xl border border-white/5">
+            <div class="flex items-center gap-3">
+                <div id="status-dot" class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span id="status-text" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">PriSongs Server: Active</span>
             </div>
+            <div id="loader" class="hidden"><div class="loader-spin"></div></div>
         </div>
+
+        <h2 id="section-title" class="text-3xl font-extrabold tracking-tight mb-8">Trending Hits</h2>
 
         <!-- Songs Grid -->
         <div id="songs-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
             <!-- Loading Placeholders -->
-            <div class="animate-pulse bg-slate-900 rounded-2xl aspect-square"></div>
-            <div class="animate-pulse bg-slate-900 rounded-2xl aspect-square"></div>
-            <div class="animate-pulse bg-slate-900 rounded-2xl aspect-square"></div>
+            <div class="bg-white/5 aspect-square rounded-3xl animate-pulse"></div>
+            <div class="bg-white/5 aspect-square rounded-3xl animate-pulse"></div>
+            <div class="bg-white/5 aspect-square rounded-3xl animate-pulse"></div>
         </div>
 
-        <!-- Empty State -->
-        <div id="empty-state" class="hidden py-32 flex flex-col items-center justify-center text-slate-600 gap-4">
-            <i data-lucide="disc" class="w-16 h-16 opacity-20"></i>
-            <p class="text-lg">No songs found. Try a different search!</p>
+        <!-- Empty/Error State -->
+        <div id="msg-state" class="hidden py-32 flex flex-col items-center justify-center text-slate-600 gap-4">
+            <i data-lucide="music-4" class="w-16 h-16 opacity-10"></i>
+            <p id="msg-text" class="text-sm font-medium">Search for your favorite song to start the party.</p>
         </div>
     </main>
 
-    <!-- Fixed Bottom Player Bar -->
-    <footer id="player-bar" class="glass border-t border-slate-800 p-4 sticky bottom-0 z-50 transform translate-y-full transition-transform duration-500">
+    <!-- Floating Player Bar -->
+    <footer id="player-bar" class="player-blur border-t border-white/5 p-4 sticky bottom-0 z-50 translate-y-full transition-transform duration-500">
         <div class="container mx-auto flex items-center justify-between gap-6">
             <!-- Track Info -->
-            <div class="flex items-center gap-4 w-1/4 min-w-[150px]">
-                <img id="player-img" src="" class="w-14 h-14 rounded-lg object-cover shadow-2xl border border-white/5">
+            <div class="flex items-center gap-4 w-1/4 min-w-[180px]">
+                <img id="p-img" src="" class="w-14 h-14 rounded-2xl object-cover shadow-2xl border border-white/10">
                 <div class="truncate">
-                    <h4 id="player-title" class="font-bold text-sm truncate">Song Title</h4>
-                    <p id="player-artist" class="text-[10px] text-indigo-400 font-bold uppercase truncate">Artist Name</p>
+                    <h4 id="p-title" class="font-bold text-sm truncate">Song Title</h4>
+                    <p id="p-artist" class="text-[10px] text-indigo-400 font-bold uppercase truncate tracking-wider mt-0.5">Artist Name</p>
                 </div>
             </div>
 
             <!-- Controls -->
             <div class="flex flex-col items-center flex-1 max-w-xl">
-                <div class="flex items-center gap-6 mb-2">
-                    <button class="text-slate-500 hover:text-white"><i data-lucide="skip-back"></i></button>
-                    <button id="play-btn" class="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl">
-                        <i id="play-icon" data-lucide="play" fill="currentColor"></i>
+                <div class="flex items-center gap-8 mb-2">
+                    <button class="text-slate-500 hover:text-white transition-colors"><i data-lucide="repeat" size="18"></i></button>
+                    <button id="p-play" class="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 active:scale-90 transition-all shadow-xl">
+                        <i id="p-icon" data-lucide="play" fill="currentColor"></i>
                     </button>
-                    <button class="text-slate-500 hover:text-white"><i data-lucide="skip-forward"></i></button>
+                    <button class="text-slate-500 hover:text-white transition-colors"><i data-lucide="shuffle" size="18"></i></button>
                 </div>
                 <div class="w-full flex items-center gap-3 text-[10px] font-mono text-slate-500">
-                    <span id="time-cur">0:00</span>
-                    <input type="range" id="progress" value="0" step="0.1" class="w-full h-1 bg-slate-800 rounded-full appearance-none cursor-pointer">
-                    <span id="time-total">0:00</span>
+                    <span id="p-cur">0:00</span>
+                    <div class="flex-1 relative h-1 bg-white/10 rounded-full group">
+                        <div id="p-fill" class="absolute inset-y-0 left-0 bg-indigo-500 rounded-full group-hover:bg-indigo-400 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
+                        <input type="range" id="p-progress" value="0" step="0.1" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    </div>
+                    <span id="p-total">0:00</span>
                 </div>
             </div>
 
             <!-- Volume -->
             <div class="flex items-center justify-end gap-3 w-1/4">
                 <i data-lucide="volume-2" class="text-slate-500 w-4 h-4"></i>
-                <input type="range" id="volume" min="0" max="1" step="0.1" value="0.8" class="w-20 h-1">
+                <input type="range" id="p-volume" min="0" max="1" step="0.05" value="0.8" class="w-20 h-1">
             </div>
         </div>
     </footer>
 
-    <!-- Audio Element -->
-    <audio id="audio-engine" preload="auto"></audio>
+    <audio id="audio-engine" crossorigin="anonymous"></audio>
 
     <script>
         /**
-         * CONFIGURATION
-         * We use the public JioSaavn API.
+         * PriSongs Resilient API Config
+         * Using multiple mirrors to avoid "API Connection Failed"
          */
-        const API_URL = "https://saavn.dev/api";
-        let myLibrary = JSON.parse(localStorage.getItem('melody_pro_lib') || '[]');
+        const MIRRORS = [
+            "https://saavn.dev/api",
+            "https://jio-saavn-api.vercel.app/api",
+            "https://saavn.me/api"
+        ];
+        
+        let mirrorIndex = 0;
+        let library = JSON.parse(localStorage.getItem('prisongs_lib') || '[]');
         let currentTab = 'home';
-        let isPlaying = false;
-
         const audio = document.getElementById('audio-engine');
-        const songsGrid = document.getElementById('songs-grid');
-        const loader = document.getElementById('loader');
-        const errorBox = document.getElementById('error-box');
 
-        function refreshIcons() { lucide.createIcons(); }
+        const refreshIcons = () => lucide.createIcons();
 
-        // --- Core Functions ---
-
-        async function fetchMusic(query) {
-            errorBox.classList.add('hidden');
-            loader.classList.remove('hidden');
+        // --- Multi-Server Search Logic ---
+        async function fetchPriSongs(query) {
+            document.getElementById('loader').classList.remove('hidden');
+            const mirror = MIRRORS[mirrorIndex];
             
             try {
-                // Fetch from Saavn API
-                const res = await fetch(`${API_URL}/search/songs?query=${encodeURIComponent(query)}`);
+                const res = await fetch(`${mirror}/search/songs?query=${encodeURIComponent(query)}`);
                 const data = await res.json();
                 
                 if (data.success && data.data.results.length > 0) {
-                    displaySongs(data.data.results);
+                    renderSongs(data.data.results);
+                    updateStatus(`PriSongs Server: Online`, 'bg-green-500');
                 } else {
-                    showError("No songs found for your search.");
+                    handleFail(query);
                 }
             } catch (err) {
-                showError("API Connection Failed. Please check your internet or try again later.");
-                console.error(err);
+                console.warn("Mirror failed, trying next mirror...");
+                handleFail(query);
             } finally {
-                loader.classList.add('hidden');
+                document.getElementById('loader').classList.add('hidden');
             }
         }
 
-        function displaySongs(songs) {
-            if (songs.length === 0) {
-                document.getElementById('empty-state').classList.remove('hidden');
-                songsGrid.innerHTML = '';
-                return;
+        function handleFail(query) {
+            if (mirrorIndex < MIRRORS.length - 1) {
+                mirrorIndex++;
+                fetchPriSongs(query);
+            } else {
+                mirrorIndex = 0;
+                updateStatus("Offline: Checking Connection", 'bg-red-500');
+                document.getElementById('msg-state').classList.remove('hidden');
+                document.getElementById('msg-text').innerText = "Servers are busy. Please check your internet or try again later.";
             }
-            document.getElementById('empty-state').classList.add('hidden');
+        }
 
-            songsGrid.innerHTML = songs.map(song => {
-                const img = song.image[song.image.length - 1].url; // Highest quality image
-                const streamUrl = song.downloadUrl[song.downloadUrl.length - 1].url; // Highest quality audio
-                
+        function renderSongs(songs) {
+            document.getElementById('msg-state').classList.add('hidden');
+            const grid = document.getElementById('songs-grid');
+            grid.innerHTML = songs.map(song => {
+                const img = song.image[song.image.length - 1].url;
+                const stream = song.downloadUrl[song.downloadUrl.length - 1].url;
                 return `
-                <div class="song-card bg-slate-900/40 p-4 rounded-2xl border border-slate-800 hover:bg-slate-800/80 transition-all cursor-pointer group"
-                    onclick='playSong(${JSON.stringify({id: song.id, title: song.name, artist: song.artists.primary[0].name, img, url: streamUrl}).replace(/'/g, "&apos;")})'>
-                    <div class="relative aspect-square mb-4 overflow-hidden rounded-xl shadow-lg">
+                <div class="song-card bg-white/5 p-4 rounded-[2rem] border border-white/5 hover:bg-white/10 transition-all cursor-pointer group"
+                    onclick='playPriSong(${JSON.stringify({id: song.id, title: song.name, artist: song.artists.primary[0].name, img, url: stream}).replace(/'/g, "&apos;")})'>
+                    <div class="relative aspect-square mb-4 overflow-hidden rounded-[1.5rem] shadow-2xl">
                         <img src="${img}" class="w-full h-full object-cover transition-transform duration-700">
-                        <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                            <div class="bg-white text-black p-3 rounded-full shadow-2xl transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                        <div class="absolute inset-0 bg-indigo-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                            <div class="bg-white text-black p-3 rounded-full shadow-2xl transform scale-75 group-hover:scale-100 transition-transform">
                                 <i data-lucide="play" fill="currentColor"></i>
                             </div>
                         </div>
                     </div>
-                    <h3 class="font-bold text-sm truncate">${song.name}</h3>
-                    <p class="text-slate-500 text-[10px] font-bold uppercase truncate tracking-widest mt-1">${song.artists.primary[0].name}</p>
+                    <h3 class="font-bold text-sm truncate px-1">${song.name}</h3>
+                    <p class="text-indigo-400 text-[9px] font-bold uppercase truncate tracking-widest mt-1 px-1">${song.artists.primary[0].name}</p>
                 </div>
                 `;
             }).join('');
             refreshIcons();
         }
 
-        function playSong(song) {
-            const playerBar = document.getElementById('player-bar');
-            playerBar.classList.remove('translate-y-full');
-            
-            document.getElementById('player-img').src = song.img;
-            document.getElementById('player-title').innerText = song.title;
-            document.getElementById('player-artist').innerText = song.artist;
+        function playPriSong(track) {
+            document.getElementById('player-bar').classList.remove('translate-y-full');
+            document.getElementById('p-img').src = track.img;
+            document.getElementById('p-title').innerText = track.title;
+            document.getElementById('p-artist').innerText = track.artist;
 
-            audio.src = song.url;
-            audio.play().then(() => setPlayState(true)).catch(err => {
-                showError("Audio format not supported by browser.");
-            });
+            audio.src = track.url;
+            audio.play();
+            updatePlayUI(true);
 
-            // Auto-Add to Library (LocalStorage)
-            if (!myLibrary.find(t => t.id === song.id)) {
-                myLibrary.unshift(song);
-                localStorage.setItem('melody_pro_lib', JSON.stringify(myLibrary));
+            // Auto-Add to Local History
+            if (!library.find(t => t.id === track.id)) {
+                library.unshift(track);
+                localStorage.setItem('prisongs_lib', JSON.stringify(library));
             }
         }
 
-        function setPlayState(playing) {
-            isPlaying = playing;
-            const icon = document.getElementById('play-icon');
-            document.getElementById('play-btn').innerHTML = playing ? 
-                '<i data-lucide="pause" fill="currentColor"></i>' : 
-                '<i data-lucide="play" fill="currentColor" class="ml-1"></i>';
+        function updatePlayUI(playing) {
+            const btn = document.getElementById('p-play');
+            btn.innerHTML = playing ? '<i data-lucide="pause" fill="currentColor"></i>' : '<i data-lucide="play" fill="currentColor" class="ml-1"></i>';
             refreshIcons();
         }
 
-        function showError(msg) {
-            errorBox.classList.remove('hidden');
-            document.getElementById('error-text').innerText = msg;
-            songsGrid.innerHTML = '';
+        function updateStatus(text, color) {
+            document.getElementById('status-text').innerText = text;
+            document.getElementById('status-dot').className = `w-2 h-2 rounded-full ${color}`;
         }
 
         // --- Interaction ---
@@ -224,67 +223,40 @@
         document.getElementById('search-form').onsubmit = (e) => {
             e.preventDefault();
             const q = document.getElementById('search-input').value;
+            mirrorIndex = 0;
             currentTab = 'home';
-            updateUI();
-            fetchMusic(q);
+            updateTabs();
+            fetchPriSongs(q);
         };
 
-        document.getElementById('play-btn').onclick = () => {
-            if (audio.paused) {
-                audio.play();
-                setPlayState(true);
-            } else {
-                audio.pause();
-                setPlayState(false);
-            }
+        document.getElementById('p-play').onclick = () => {
+            if (audio.paused) { audio.play(); updatePlayUI(true); }
+            else { audio.pause(); updatePlayUI(false); }
         };
 
         audio.ontimeupdate = () => {
-            const progress = (audio.currentTime / audio.duration) * 100;
-            document.getElementById('progress').value = progress || 0;
-            document.getElementById('time-cur').innerText = formatTime(audio.currentTime);
-            document.getElementById('time-total').innerText = formatTime(audio.duration);
+            const perc = (audio.currentTime / audio.duration) * 100;
+            document.getElementById('p-fill').style.width = `${perc || 0}%`;
+            document.getElementById('p-progress').value = perc || 0;
+            document.getElementById('p-cur').innerText = formatTime(audio.currentTime);
+            document.getElementById('p-total').innerText = formatTime(audio.duration);
         };
 
-        document.getElementById('progress').oninput = (e) => {
-            audio.currentTime = (e.target.value / 100) * audio.duration;
-        };
+        document.getElementById('p-progress').oninput = (e) => audio.currentTime = (e.target.value / 100) * audio.duration;
+        document.getElementById('p-volume').oninput = (e) => audio.volume = e.target.value;
 
-        document.getElementById('volume').oninput = (e) => {
-            audio.volume = e.target.value;
-        };
+        const formatTime = (s) => isNaN(s) ? "0:00" : `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2, '0')}`;
 
-        function formatTime(s) {
-            if (isNaN(s)) return "0:00";
-            const m = Math.floor(s / 60);
-            const sec = Math.floor(s % 60);
-            return `${m}:${sec < 10 ? '0' : ''}${sec}`;
+        function updateTabs() {
+            document.getElementById('tab-home').className = currentTab === 'home' ? 'active-tab py-1' : 'hover:text-white py-1 transition-all';
+            document.getElementById('tab-library').className = currentTab === 'library' ? 'active-tab py-1' : 'hover:text-white py-1 transition-all';
+            document.getElementById('section-title').innerText = currentTab === 'home' ? 'Top Discovery' : 'My PriSongs Library';
         }
 
-        function updateUI() {
-            document.getElementById('tab-home').className = currentTab === 'home' ? 'active-tab' : 'hover:text-white transition-colors';
-            document.getElementById('tab-library').className = currentTab === 'library' ? 'active-tab' : 'hover:text-white transition-colors';
-            document.getElementById('section-title').innerText = currentTab === 'home' ? 'Discovery' : 'My Cloud Library';
-        }
+        document.getElementById('tab-home').onclick = () => { currentTab = 'home'; updateTabs(); fetchPriSongs("Trending Songs"); };
+        document.getElementById('tab-library').onclick = () => { currentTab = 'library'; updateTabs(); renderSongs(library); };
 
-        document.getElementById('tab-home').onclick = () => {
-            currentTab = 'home';
-            updateUI();
-            fetchMusic("Top Hits");
-        };
-
-        document.getElementById('tab-library').onclick = () => {
-            currentTab = 'library';
-            updateUI();
-            displaySongs(myLibrary);
-        };
-
-        // Initialize App
-        window.onload = () => {
-            refreshIcons();
-            fetchMusic("Trending Now");
-        };
-
+        window.onload = () => { refreshIcons(); fetchPriSongs("Weekly Top Hits"); };
     </script>
 </body>
 </html>
